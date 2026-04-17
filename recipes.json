@@ -1,0 +1,49 @@
+{
+  "🔥 Fire+💧 Water": "☁️ Steam",
+  "💧 Water+🔥 Fire": "☁️ Steam",
+
+  "🌍 Earth+💧 Water": "🪨 Mud",
+  "💧 Water+🌍 Earth": "🪨 Mud",
+
+  "🔥 Fire+🌍 Earth": "🌋 Lava",
+  "🌍 Earth+🔥 Fire": "🌋 Lava",
+
+  "💨 Wind+🔥 Fire": "💨 Smoke",
+  "🔥 Fire+💨 Wind": "💨 Smoke",
+
+  "💨 Wind+💧 Water": "🌊 Wave",
+  "💧 Water+💨 Wind": "🌊 Wave",
+
+  "🌋 Lava+💧 Water": "🪨 Stone",
+  "💧 Water+🌋 Lava": "🪨 Stone",
+
+  "🪨 Stone+🔥 Fire": "🔩 Metal",
+  "🔥 Fire+🪨 Stone": "🔩 Metal",
+
+  "🌍 Earth+💨 Wind": "🌪️ Dust",
+  "💨 Wind+🌍 Earth": "🌪️ Dust",
+
+  "🌪️ Dust+💧 Water": "🌱 Plant",
+  "💧 Water+🌪️ Dust": "🌱 Plant",
+
+  "🌱 Plant+🔥 Fire": "🌿 Ash",
+  "🔥 Fire+🌱 Plant": "🌿 Ash",
+
+  "🌱 Plant+💧 Water": "🌳 Tree",
+  "💧 Water+🌱 Plant": "🌳 Tree",
+
+  "🌳 Tree+🔥 Fire": "🪵 Charcoal",
+  "🔥 Fire+🌳 Tree": "🪵 Charcoal",
+
+  "🔩 Metal+🔥 Fire": "⚔️ Sword",
+  "🔥 Fire+🔩 Metal": "⚔️ Sword",
+
+  "☁️ Steam+💨 Wind": "☁️ Cloud",
+  "💨 Wind+☁️ Steam": "☁️ Cloud",
+
+  "☁️ Cloud+💧 Water": "🌧️ Rain",
+  "💧 Water+☁️ Cloud": "🌧️ Rain",
+
+  "🌧️ Rain+🌍 Earth": "🌾 Life",
+  "🌍 Earth+🌧️ Rain": "🌾 Life"
+}
