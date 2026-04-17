@@ -1,93 +1,107 @@
+/* Core Layout Fixes */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
 body, html {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
+    overflow: hidden; /* Prevents whole-page scrolling on mobile */
+    background-color: #fff;
     font-family: 'Inter', sans-serif;
-    overflow: hidden;
-    background-color: #ffffff;
-    /* Prevent iPad text selection and long-press menus */
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-    user-select: none;
-    touch-action: none;
 }
 
 #game-container {
     display: flex;
+    flex-direction: row;
     width: 100vw;
     height: 100vh;
 }
 
+/* LEFT SIDE: The Workspace */
 #workspace {
-    flex-grow: 1;
-    background-color: #f3f4f6;
+    flex: 1; /* Takes up all remaining space */
+    background-color: #f9fafb;
     background-image: radial-gradient(#d1d5db 1px, transparent 1px);
-    background-size: 24px 24px;
+    background-size: 30px 30px;
     position: relative;
     overflow: hidden;
+    touch-action: none; /* Crucial for dragging on mobile */
 }
 
+/* RIGHT SIDE: The Sidebar */
 #sidebar {
-    width: 280px;
-    flex-shrink: 0; /* Prevents sidebar from disappearing */
-    background-color: #ffffff;
-    border-left: 1px solid #e5e7eb;
+    width: 300px; /* Fixed width */
+    min-width: 300px; 
+    height: 100%;
+    background: #ffffff;
+    border-left: 2px solid #e5e7eb;
     display: flex;
     flex-direction: column;
-    z-index: 100;
+    z-index: 1000;
 }
 
 .sidebar-header {
     padding: 20px;
-    border-bottom: 1px solid #eee;
-    font-weight: 600;
+    border-bottom: 1px solid #f3f4f6;
+    text-align: center;
+}
+
+.sidebar-header h1 {
+    font-size: 1.1rem;
+    margin: 0;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 #inventory {
-    padding: 12px;
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto; /* Allows scrolling when you have many items */
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;
     gap: 8px;
-    overflow-y: auto;
-    flex-grow: 1;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* The blocks/elements */
+/* The Elements */
 .element {
-    padding: 8px 14px;
+    padding: 10px 16px;
     background: white;
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #1f2937;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    font-weight: 600;
+    font-size: 1rem;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     white-space: nowrap;
-    display: inline-block;
 }
 
 .element.in-workspace {
     position: absolute;
     cursor: grab;
     z-index: 10;
-    /* Extra spacing for easier mobile tapping */
-    padding: 10px 18px; 
 }
 
 #clear-btn {
     position: absolute;
-    bottom: 20px;
-    right: 20px;
-    padding: 10px 20px;
-    background: white;
+    top: 20px;
+    left: 20px;
+    padding: 8px 16px;
+    background: #ffffff;
     border: 1px solid #d1d5db;
-    border-radius: 8px;
-    cursor: pointer;
+    border-radius: 6px;
     font-weight: 600;
-    z-index: 50;
+    cursor: pointer;
+    z-index: 100;
 }
 
-#clear-btn:active { background: #f9fafb; }
+#clear-btn:active { background: #f3f4f6; }
