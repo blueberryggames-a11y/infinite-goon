@@ -10,18 +10,28 @@
 <body>
     <div id="game-container">
         <main id="workspace">
-            <button id="clear-btn">Clear Workspace</button>
+            <div id="controls">
+                <button id="clear-btn">Clear Workspace</button>
+                <button id="reset-btn" onclick="confirmReset()">Reset All Progress</button>
+            </div>
         </main>
 
         <aside id="sidebar">
             <div class="sidebar-header">
                 <h1>Discovered</h1>
             </div>
-            <div id="inventory">
-                </div>
+            <div id="inventory"></div>
         </aside>
     </div>
 
     <script src="game.js"></script>
+    <script>
+        function confirmReset() {
+            if (confirm("This will delete all your discovered items. Are you sure?")) {
+                localStorage.removeItem('infinite_craft_save');
+                location.reload();
+            }
+        }
+    </script>
 </body>
 </html>
