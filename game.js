@@ -1,57 +1,56 @@
 let recipes = {};
-let discovered = JSON.parse(localStorage.getItem("discovered")) || [
+let discovered = JSON.parse(localStorage.getItem("craft_discovered")) || [
     "💧 Water",
     "🔥 Fire",
     "🌍 Earth",
     "💨 Wind"
 ];
 
-const inventory = document.getElementById("inventory");
+const elementsDiv = document.getElementById("elements");
 const workspace = document.getElementById("workspace");
 const search = document.getElementById("search");
-const notification = document.getElementById("notification");
+const toast = document.getElementById("toast");
 
 fetch("recipes.json")
-    .then(res => res.json())
+    .then(r => r.json())
     .then(data => {
         recipes = data;
-        renderInventory();
+        renderElements();
     });
 
-function saveGame() {
-    localStorage.setItem("discovered", JSON.stringify(discovered));
+function save() {
+    localStorage.setItem("craft_discovered", JSON.stringify(discovered));
 }
 
-function renderInventory(filter = "") {
-    inventory.innerHTML = "";
+function renderElements(filter = "") {
+    elementsDiv.innerHTML = "";
     discovered
-        .filter(item => item.toLowerCase().includes(filter.toLowerCase()))
+        .filter(e => e.toLowerCase().includes(filter.toLowerCase()))
         .sort()
         .forEach(name => {
             const div = document.createElement("div");
             div.className = "element";
             div.textContent = name;
-            div.onclick = () => spawn(name);
-            inventory.appendChild(div);
+            div.onclick = () => createBlock(name, 350, 200);
+            elementsDiv.appendChild(div);
         });
 }
 
-search.addEventListener("input", e => {
-    renderInventory(e.target.value);
-});
+search.addEventListener("input", e => renderElements(e.target.value));
 
-function spawn(name) {
-    const el = document.createElement("div");
-    el.className = "floating";
-    el.textContent = name;
-    el.dataset.name = name;
+function createBlock(name, x, y) {
+    const block = document.createElement("div");
+    block.className = "block";
+    block.textContent = name;
+    block.dataset.name = name;
+    block.style.left = x + "px";
+    block.style.top = y + "px";
 
-    el.style.left = Math.random() * 500 + 50 + "px";
-    el.style.top = Math.random() * 400 + 50 + "px";
+    let dragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
 
-    let offsetX, offsetY, dragging = false;
-
-    el.addEventListener("mousedown", e => {
+    block.addEventListener("mousedown", e => {
         dragging = true;
         offsetX = e.offsetX;
         offsetY = e.offsetY;
@@ -59,57 +58,68 @@ function spawn(name) {
 
     document.addEventListener("mousemove", e => {
         if (!dragging) return;
+
         const rect = workspace.getBoundingClientRect();
-        el.style.left = e.clientX - rect.left - offsetX + "px";
-        el.style.top = e.clientY - rect.top - offsetY + "px";
-        checkCombine(el);
+        block.style.left = e.clientX - rect.left - offsetX + "px";
+        block.style.top = e.clientY - rect.top - offsetY + "px";
+
+        checkCombine(block);
     });
 
-    document.addEventListener("mouseup", () => dragging = false);
+    document.addEventListener("mouseup", () => {
+        dragging = false;
+    });
 
-    workspace.appendChild(el);
+    workspace.appendChild(block);
 }
 
 function checkCombine(active) {
-    const all = [...document.querySelectorAll(".floating")];
+    const blocks = [...document.querySelectorAll(".block")];
 
-    for (const other of all) {
-        if (active === other) continue;
+    for (let other of blocks) {
+        if (other === active) continue;
 
         const r1 = active.getBoundingClientRect();
         const r2 = other.getBoundingClientRect();
 
-        const overlap = !(
+        const touching = !(
             r1.right < r2.left ||
             r1.left > r2.right ||
             r1.bottom < r2.top ||
             r1.top > r2.bottom
         );
 
-        if (overlap) {
-            const key = active.dataset.name + "+" + other.dataset.name;
-            const result = recipes[key];
+        if (!touching) continue;
 
-            if (result) {
-                active.remove();
-                other.remove();
-                spawn(result);
+        const a = active.dataset.name;
+        const b = other.dataset.name;
+        const result = recipes[a + "+" + b];
 
-                if (!discovered.includes(result)) {
-                    discovered.push(result);
-                    saveGame();
-                    renderInventory(search.value);
-                    notify("Discovered " + result);
-                }
+        if (result) {
+            const x = (parseInt(active.style.left) + parseInt(other.style.left)) / 2;
+            const y = (parseInt(active.style.top) + parseInt(other.style.top)) / 2;
+
+            active.remove();
+            other.remove();
+
+            createBlock(result, x, y);
+
+            if (!discovered.includes(result)) {
+                discovered.push(result);
+                save();
+                renderElements(search.value);
+                showToast("New element: " + result);
             }
+
+            break;
         }
     }
 }
 
-function notify(text) {
-    notification.textContent = text;
-    notification.style.display = "block";
+function showToast(text) {
+    toast.textContent = text;
+    toast.style.display = "block";
     setTimeout(() => {
-        notification.style.display = "none";
+        toast.style.display = "none";
     }, 2000);
 }
