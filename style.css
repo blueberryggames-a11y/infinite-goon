@@ -3,8 +3,9 @@ body, html {
     padding: 0;
     width: 100%;
     height: 100%;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden; /* Prevents pull-to-refresh on mobile */
+    background-color: #121212;
 }
 
 #game-container {
@@ -15,43 +16,75 @@ body, html {
 
 #workspace {
     flex-grow: 1;
-    background-color: #f7f7f7;
+    background-color: #f8f9fa;
+    /* Cool dot grid background */
+    background-image: radial-gradient(#d1d1d1 1px, transparent 1px);
+    background-size: 20px 20px;
     position: relative;
     overflow: hidden;
 }
 
 #sidebar {
-    width: 300px;
+    width: 320px;
     background-color: #ffffff;
-    border-left: 2px solid #ddd;
+    border-left: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 15px rgba(0,0,0,0.05);
+    z-index: 100;
+}
+
+.sidebar-title {
+    margin: 0;
+    padding: 20px;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+}
+
+#inventory {
     padding: 15px;
-    box-sizing: border-box;
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;
     gap: 10px;
     overflow-y: auto;
+    flex-grow: 1;
 }
 
 .element {
-    padding: 10px 15px;
+    padding: 8px 16px;
     background: white;
-    border: 1px solid #ccc;
+    border: 1px solid #d1d5db;
     border-radius: 8px;
-    cursor: grab;
-    user-select: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     display: inline-block;
-    transition: transform 0.1s;
+    transition: transform 0.1s, box-shadow 0.1s;
+    
+    /* CRITICAL iOS FIXES */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
-.element:active {
-    cursor: grabbing;
-    transform: scale(1.05);
+.element:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
 }
 
 .element.in-workspace {
     position: absolute;
-    /* Remove transition for smoother dragging */
-    transition: none; 
+    cursor: grab;
+    transition: none; /* Smooth dragging */
+    touch-action: none; /* Prevents screen scrolling when dragging on mobile */
+}
+
+.element.in-workspace:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
 }
