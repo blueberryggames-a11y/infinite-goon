@@ -15,15 +15,16 @@ fetch("recipes.json")
     .then(r => r.json())
     .then(data => {
         recipes = data;
-        renderElements();
+        renderSidebar();
     });
 
-function save() {
+function saveGame() {
     localStorage.setItem("craft_discovered", JSON.stringify(discovered));
 }
 
-function renderElements(filter = "") {
+function renderSidebar(filter = "") {
     elementsDiv.innerHTML = "";
+
     discovered
         .filter(e => e.toLowerCase().includes(filter.toLowerCase()))
         .sort()
@@ -31,24 +32,43 @@ function renderElements(filter = "") {
             const div = document.createElement("div");
             div.className = "element";
             div.textContent = name;
-            div.onclick = () => createBlock(name, 350, 200);
+
+            div.addEventListener("mousedown", e => {
+                createWorkspaceBlock(
+                    name,
+                    e.clientX,
+                    e.clientY
+                );
+            });
+
             elementsDiv.appendChild(div);
         });
 }
 
-search.addEventListener("input", e => renderElements(e.target.value));
+search.addEventListener("input", e => {
+    renderSidebar(e.target.value);
+});
 
-function createBlock(name, x, y) {
+function createWorkspaceBlock(name, mouseX, mouseY) {
+    const rect = workspace.getBoundingClientRect();
+
     const block = document.createElement("div");
     block.className = "block";
     block.textContent = name;
     block.dataset.name = name;
-    block.style.left = x + "px";
-    block.style.top = y + "px";
 
-    let dragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
+    block.style.left = (mouseX - rect.left - 50) + "px";
+    block.style.top = (mouseY - rect.top - 20) + "px";
+
+    workspace.appendChild(block);
+
+    enableDragging(block, true);
+}
+
+function enableDragging(block, startDragging = false) {
+    let dragging = startDragging;
+    let offsetX = 40;
+    let offsetY = 20;
 
     block.addEventListener("mousedown", e => {
         dragging = true;
@@ -56,44 +76,45 @@ function createBlock(name, x, y) {
         offsetY = e.offsetY;
     });
 
-    document.addEventListener("mousemove", e => {
+    function move(e) {
         if (!dragging) return;
 
         const rect = workspace.getBoundingClientRect();
-        block.style.left = e.clientX - rect.left - offsetX + "px";
-        block.style.top = e.clientY - rect.top - offsetY + "px";
+
+        block.style.left = (e.clientX - rect.left - offsetX) + "px";
+        block.style.top = (e.clientY - rect.top - offsetY) + "px";
 
         checkCombine(block);
-    });
+    }
 
-    document.addEventListener("mouseup", () => {
+    function stop() {
         dragging = false;
-    });
+    }
 
-    workspace.appendChild(block);
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", stop);
 }
 
 function checkCombine(active) {
     const blocks = [...document.querySelectorAll(".block")];
 
-    for (let other of blocks) {
+    for (const other of blocks) {
         if (other === active) continue;
 
         const r1 = active.getBoundingClientRect();
         const r2 = other.getBoundingClientRect();
 
-        const touching = !(
+        const overlap = !(
             r1.right < r2.left ||
             r1.left > r2.right ||
             r1.bottom < r2.top ||
             r1.top > r2.bottom
         );
 
-        if (!touching) continue;
+        if (!overlap) continue;
 
-        const a = active.dataset.name;
-        const b = other.dataset.name;
-        const result = recipes[a + "+" + b];
+        const key = active.dataset.name + "+" + other.dataset.name;
+        const result = recipes[key];
 
         if (result) {
             const x = (parseInt(active.style.left) + parseInt(other.style.left)) / 2;
@@ -102,13 +123,21 @@ function checkCombine(active) {
             active.remove();
             other.remove();
 
-            createBlock(result, x, y);
+            const newBlock = document.createElement("div");
+            newBlock.className = "block";
+            newBlock.textContent = result;
+            newBlock.dataset.name = result;
+            newBlock.style.left = x + "px";
+            newBlock.style.top = y + "px";
+
+            workspace.appendChild(newBlock);
+            enableDragging(newBlock);
 
             if (!discovered.includes(result)) {
                 discovered.push(result);
-                save();
-                renderElements(search.value);
-                showToast("New element: " + result);
+                saveGame();
+                renderSidebar(search.value);
+                showToast("Discovered " + result);
             }
 
             break;
@@ -119,6 +148,7 @@ function checkCombine(active) {
 function showToast(text) {
     toast.textContent = text;
     toast.style.display = "block";
+
     setTimeout(() => {
         toast.style.display = "none";
     }, 2000);
