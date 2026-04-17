@@ -2,23 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Infinite Craft Clone</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <h1>🌌 Infinite Craft</h1>
-  <input type="text" id="search" placeholder="Search elements...">
-</header>
-
-<div id="container">
-  <aside id="inventory"></aside>
-  <main id="workspace"></main>
+<div id="sidebar">
+  <h1>∞ Infinite Craft</h1>
+  <input id="search" placeholder="Search...">
+  <div id="elements"></div>
 </div>
 
-<div id="notification"></div>
+<div id="workspace"></div>
+
+<div id="toast"></div>
 
 <script src="game.js"></script>
 </body>
