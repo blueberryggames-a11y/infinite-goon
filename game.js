@@ -6,37 +6,31 @@ const workspace = document.getElementById('workspace');
 const inventory = document.getElementById('inventory');
 const clearBtn = document.getElementById('clear-btn');
 
-// 1. DATA SAVING LOGIC
-function saveProgress() {
-    localStorage.setItem('infinite_craft_discovered', JSON.stringify(discovered));
-}
-
-function loadProgress() {
-    const saved = localStorage.getItem('infinite_craft_discovered');
+// 1. DATA LOADING & SAVING
+async function init() {
+    // Load local save
+    const saved = localStorage.getItem('infinite_craft_save');
     if (saved) {
         discovered = JSON.parse(saved);
     }
-}
 
-// 2. INITIALIZE
-async function init() {
-    loadProgress(); // Load saved items before rendering
     renderSidebar();
 
     try {
         const res = await fetch('recipes.json');
         if (res.ok) {
             recipes = await res.json();
+            console.log("Recipes loaded: " + Object.keys(recipes).length);
         }
     } catch (e) {
-        console.error("Failed to load recipes. Check if running on a server.");
+        console.error("Could not load recipes.json. Make sure you are using a local server.");
     }
 }
 
-// 3. RENDER SIDEBAR
+// 2. RENDER SIDEBAR (Alphabetical)
 function renderSidebar() {
     inventory.innerHTML = '';
-    // Sort items alphabetically to make finding them easier
+    // Sort items so user can find them easily in 2500+ list
     [...new Set(discovered)].sort((a, b) => a.localeCompare(b)).forEach(item => {
         const el = document.createElement('div');
         el.className = 'element';
@@ -49,30 +43,30 @@ function renderSidebar() {
     });
 }
 
-// 4. SPAWN LOGIC
+// 3. SPAWN ELEMENT
 function spawnInWorkspace(itemName) {
     const el = document.createElement('div');
     el.className = 'element in-workspace';
     el.textContent = itemName;
     
     const rect = workspace.getBoundingClientRect();
-    const offset = () => (Math.random() - 0.5) * 80;
-
-    el.style.left = (rect.width / 2) + offset() - 40 + 'px';
-    el.style.top = (rect.height / 2) + offset() - 20 + 'px';
+    // Spawn near center with slight random offset
+    const off = () => (Math.random() - 0.5) * 100;
+    el.style.left = (rect.width / 2) + off() - 40 + 'px';
+    el.style.top = (rect.height / 2) + off() - 20 + 'px';
     
     workspace.appendChild(el);
     el.onpointerdown = (e) => startDrag(e, el);
 }
 
-// 5. DRAG LOGIC (Works on iPad/Mobile/Desktop)
+// 4. DRAG LOGIC (Pointer Events for iPad/PC)
 function startDrag(e, el) {
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
     el.style.zIndex = ++zIndexCounter;
 
-    const rect = el.getBoundingClientRect();
     const workspaceRect = workspace.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
     const shiftX = e.clientX - rect.left;
     const shiftY = e.clientY - rect.top;
 
@@ -94,7 +88,7 @@ function startDrag(e, el) {
     document.addEventListener('pointerup', onPointerUp);
 }
 
-// 6. COLLISION & COMBINATION
+// 5. COLLISION & COMBINE
 function checkCollision(draggedEl) {
     const r1 = draggedEl.getBoundingClientRect();
     const items = document.querySelectorAll('.in-workspace');
@@ -103,17 +97,17 @@ function checkCollision(draggedEl) {
         if (target === draggedEl) continue;
         const r2 = target.getBoundingClientRect();
 
-        const isOverlapping = !(r1.right < r2.left || r1.left > r2.right || 
-                                r1.bottom < r2.top || r1.top > r2.bottom);
+        const overlap = !(r1.right < r2.left || r1.left > r2.right || 
+                          r1.bottom < r2.top || r1.top > r2.bottom);
 
-        if (isOverlapping) {
-            const itemA = draggedEl.textContent;
-            const itemB = target.textContent;
-            const result = recipes[`${itemA}+${itemB}`] || recipes[`${itemB}+${itemA}`];
+        if (overlap) {
+            const a = draggedEl.textContent;
+            const b = target.textContent;
+            const result = recipes[`${a}+${b}`] || recipes[`${b}+${a}`];
 
             if (result) {
-                const spawnX = target.style.left;
-                const spawnY = target.style.top;
+                const finalX = target.style.left;
+                const finalY = target.style.top;
 
                 draggedEl.remove();
                 target.remove();
@@ -121,17 +115,16 @@ function checkCollision(draggedEl) {
                 const newEl = document.createElement('div');
                 newEl.className = 'element in-workspace';
                 newEl.textContent = result;
-                newEl.style.left = spawnX;
-                newEl.style.top = spawnY;
+                newEl.style.left = finalX;
+                newEl.style.top = finalY;
                 newEl.style.zIndex = ++zIndexCounter;
                 newEl.onpointerdown = (e) => startDrag(e, newEl);
-                
                 workspace.appendChild(newEl);
 
-                // Add to list and SAVE if new
+                // Add to discovered and save
                 if (!discovered.includes(result)) {
                     discovered.push(result);
-                    saveProgress(); // Update LocalStorage
+                    localStorage.setItem('infinite_craft_save', JSON.stringify(discovered));
                     renderSidebar();
                 }
             }
@@ -140,15 +133,8 @@ function checkCollision(draggedEl) {
     }
 }
 
-// 7. CLEAR BUTTON
 clearBtn.onclick = () => {
     document.querySelectorAll('.in-workspace').forEach(el => el.remove());
-};
-
-// Add a "Force Reset" function you can call from the console if you want to wipe progress
-window.resetGame = () => {
-    localStorage.removeItem('infinite_craft_discovered');
-    location.reload();
 };
 
 init();
