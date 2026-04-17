@@ -1,54 +1,46 @@
-// 1. Setup initial state
-let discovered = ['💧 Water', '🔥 Fire', '🪨 Earth', '💨 Air'];
 let recipes = {};
+let discovered = ['💧 Water', '🔥 Fire', '🪨 Earth', '💨 Air'];
 let zIndexCounter = 100;
-
-// Hardcoded backup recipes in case recipes.json fails to load
-const backupRecipes = {
-    "💧 Water+💧 Water": "🌊 Lake",
-    "🔥 Fire+💧 Water": "💨 Steam",
-    "🪨 Earth+💧 Water": "🌱 Plant",
-    "🪨 Earth+🔥 Fire": "🌋 Lava"
-};
 
 const workspace = document.getElementById('workspace');
 const inventory = document.getElementById('inventory');
 const clearBtn = document.getElementById('clear-btn');
 
-// 2. Initialize Game
+// 1. DATA SAVING LOGIC
+function saveProgress() {
+    localStorage.setItem('infinite_craft_discovered', JSON.stringify(discovered));
+}
+
+function loadProgress() {
+    const saved = localStorage.getItem('infinite_craft_discovered');
+    if (saved) {
+        discovered = JSON.parse(saved);
+    }
+}
+
+// 2. INITIALIZE
 async function init() {
-    console.log("Game Initializing...");
-    
-    // IMMEDIATELY render starting blocks so they aren't stuck waiting for a file
+    loadProgress(); // Load saved items before rendering
     renderSidebar();
 
     try {
         const res = await fetch('recipes.json');
         if (res.ok) {
-            const data = await res.json();
-            recipes = data;
-            console.log("Recipes loaded from JSON.");
-        } else {
-            throw new Error("JSON file not found");
+            recipes = await res.json();
         }
     } catch (e) {
-        console.warn("Could not load recipes.json (Expected if not using a local server). Using backups.");
-        recipes = backupRecipes;
+        console.error("Failed to load recipes. Check if running on a server.");
     }
 }
 
-// 3. Render Sidebar
+// 3. RENDER SIDEBAR
 function renderSidebar() {
-    if (!inventory) return console.error("Inventory div not found!");
-    
     inventory.innerHTML = '';
-    // Use a Set to ensure no duplicates, then sort
-    [...new Set(discovered)].sort().forEach(item => {
+    // Sort items alphabetically to make finding them easier
+    [...new Set(discovered)].sort((a, b) => a.localeCompare(b)).forEach(item => {
         const el = document.createElement('div');
         el.className = 'element';
         el.textContent = item;
-        
-        // Use pointerdown for instant response on iPad
         el.onpointerdown = (e) => {
             e.preventDefault();
             spawnInWorkspace(item);
@@ -57,14 +49,14 @@ function renderSidebar() {
     });
 }
 
-// 4. Spawn in Workspace
+// 4. SPAWN LOGIC
 function spawnInWorkspace(itemName) {
     const el = document.createElement('div');
     el.className = 'element in-workspace';
     el.textContent = itemName;
     
     const rect = workspace.getBoundingClientRect();
-    const offset = () => (Math.random() - 0.5) * 50;
+    const offset = () => (Math.random() - 0.5) * 80;
 
     el.style.left = (rect.width / 2) + offset() - 40 + 'px';
     el.style.top = (rect.height / 2) + offset() - 20 + 'px';
@@ -73,7 +65,7 @@ function spawnInWorkspace(itemName) {
     el.onpointerdown = (e) => startDrag(e, el);
 }
 
-// 5. Drag Logic
+// 5. DRAG LOGIC (Works on iPad/Mobile/Desktop)
 function startDrag(e, el) {
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
@@ -102,7 +94,7 @@ function startDrag(e, el) {
     document.addEventListener('pointerup', onPointerUp);
 }
 
-// 6. Combination Logic
+// 6. COLLISION & COMBINATION
 function checkCollision(draggedEl) {
     const r1 = draggedEl.getBoundingClientRect();
     const items = document.querySelectorAll('.in-workspace');
@@ -111,10 +103,10 @@ function checkCollision(draggedEl) {
         if (target === draggedEl) continue;
         const r2 = target.getBoundingClientRect();
 
-        const overlap = !(r1.right < r2.left || r1.left > r2.right || 
-                          r1.bottom < r2.top || r1.top > r2.bottom);
+        const isOverlapping = !(r1.right < r2.left || r1.left > r2.right || 
+                                r1.bottom < r2.top || r1.top > r2.bottom);
 
-        if (overlap) {
+        if (isOverlapping) {
             const itemA = draggedEl.textContent;
             const itemB = target.textContent;
             const result = recipes[`${itemA}+${itemB}`] || recipes[`${itemB}+${itemA}`];
@@ -136,8 +128,10 @@ function checkCollision(draggedEl) {
                 
                 workspace.appendChild(newEl);
 
+                // Add to list and SAVE if new
                 if (!discovered.includes(result)) {
                     discovered.push(result);
+                    saveProgress(); // Update LocalStorage
                     renderSidebar();
                 }
             }
@@ -146,9 +140,15 @@ function checkCollision(draggedEl) {
     }
 }
 
+// 7. CLEAR BUTTON
 clearBtn.onclick = () => {
     document.querySelectorAll('.in-workspace').forEach(el => el.remove());
 };
 
-// Run the init
+// Add a "Force Reset" function you can call from the console if you want to wipe progress
+window.resetGame = () => {
+    localStorage.removeItem('infinite_craft_discovered');
+    location.reload();
+};
+
 init();
