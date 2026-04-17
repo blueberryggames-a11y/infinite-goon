@@ -1,155 +1,136 @@
 let recipes = {};
-let discovered = JSON.parse(localStorage.getItem("craft_discovered")) || [
-    "💧 Water",
-    "🔥 Fire",
-    "🌍 Earth",
-    "💨 Wind"
-];
+let discovered = ['Water', 'Fire', 'Earth', 'Air'];
+let zIndexCounter = 10;
 
-const elementsDiv = document.getElementById("elements");
-const workspace = document.getElementById("workspace");
-const search = document.getElementById("search");
-const toast = document.getElementById("toast");
+const workspace = document.getElementById('workspace');
+const sidebar = document.getElementById('sidebar');
 
-fetch("recipes.json")
-    .then(r => r.json())
+// 1. Load the recipes from JSON
+fetch('recipes.json')
+    .then(response => response.json())
     .then(data => {
         recipes = data;
         renderSidebar();
+    })
+    .catch(error => console.error("Error loading recipes:", error));
+
+// 2. Render the sidebar inventory
+function renderSidebar() {
+    sidebar.innerHTML = '';
+    discovered.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'element';
+        el.textContent = item;
+        
+        // When clicking a sidebar item, create a clone in the workspace
+        el.onmousedown = (e) => startDrag(e, item, true);
+        sidebar.appendChild(el);
     });
-
-function saveGame() {
-    localStorage.setItem("craft_discovered", JSON.stringify(discovered));
 }
 
-function renderSidebar(filter = "") {
-    elementsDiv.innerHTML = "";
+// 3. Handle Dragging Logic
+function startDrag(e, itemName, isFromSidebar) {
+    e.preventDefault();
+    let el;
 
-    discovered
-        .filter(e => e.toLowerCase().includes(filter.toLowerCase()))
-        .sort()
-        .forEach(name => {
-            const div = document.createElement("div");
-            div.className = "element";
-            div.textContent = name;
-
-            div.addEventListener("mousedown", e => {
-                createWorkspaceBlock(
-                    name,
-                    e.clientX,
-                    e.clientY
-                );
-            });
-
-            elementsDiv.appendChild(div);
-        });
-}
-
-search.addEventListener("input", e => {
-    renderSidebar(e.target.value);
-});
-
-function createWorkspaceBlock(name, mouseX, mouseY) {
-    const rect = workspace.getBoundingClientRect();
-
-    const block = document.createElement("div");
-    block.className = "block";
-    block.textContent = name;
-    block.dataset.name = name;
-
-    block.style.left = (mouseX - rect.left - 50) + "px";
-    block.style.top = (mouseY - rect.top - 20) + "px";
-
-    workspace.appendChild(block);
-
-    enableDragging(block, true);
-}
-
-function enableDragging(block, startDragging = false) {
-    let dragging = startDragging;
-    let offsetX = 40;
-    let offsetY = 20;
-
-    block.addEventListener("mousedown", e => {
-        dragging = true;
-        offsetX = e.offsetX;
-        offsetY = e.offsetY;
-    });
-
-    function move(e) {
-        if (!dragging) return;
-
-        const rect = workspace.getBoundingClientRect();
-
-        block.style.left = (e.clientX - rect.left - offsetX) + "px";
-        block.style.top = (e.clientY - rect.top - offsetY) + "px";
-
-        checkCombine(block);
+    if (isFromSidebar) {
+        // Create a new element in the workspace
+        el = document.createElement('div');
+        el.className = 'element in-workspace';
+        el.textContent = itemName;
+        workspace.appendChild(el);
+        
+        // Setup future drags for this specific workspace element
+        el.onmousedown = (ev) => startDrag(ev, itemName, false);
+    } else {
+        // We are clicking an element already in the workspace
+        el = e.target;
     }
 
-    function stop() {
-        dragging = false;
+    // Bring element to front
+    el.style.zIndex = ++zIndexCounter;
+
+    // Calculate offset so the mouse grabs the element exactly where clicked
+    let rect = el.getBoundingClientRect();
+    let shiftX = e.clientX - rect.left;
+    let shiftY = e.clientY - rect.top;
+
+    // Initial position set
+    moveAt(e.pageX, e.pageY);
+
+    function moveAt(pageX, pageY) {
+        el.style.left = pageX - shiftX + 'px';
+        el.style.top = pageY - shiftY + 'px';
     }
 
-    document.addEventListener("mousemove", move);
-    document.addEventListener("mouseup", stop);
+    function onMouseMove(event) {
+        moveAt(event.pageX, event.pageY);
+    }
+
+    // Attach mousemove to document so it tracks even if mouse moves fast
+    document.addEventListener('mousemove', onMouseMove);
+
+    // 4. Handle Dropping and Collision Detection
+    el.onmouseup = function() {
+        document.removeEventListener('mousemove', onMouseMove);
+        el.onmouseup = null;
+        checkCollision(el);
+    };
 }
 
-function checkCombine(active) {
-    const blocks = [...document.querySelectorAll(".block")];
+// 5. Check if dropped on another element
+function checkCollision(draggedEl) {
+    const rect1 = draggedEl.getBoundingClientRect();
+    const workspaceElements = document.querySelectorAll('#workspace .element');
 
-    for (const other of blocks) {
-        if (other === active) continue;
+    for (let targetEl of workspaceElements) {
+        if (targetEl === draggedEl) continue; // Skip self
 
-        const r1 = active.getBoundingClientRect();
-        const r2 = other.getBoundingClientRect();
+        const rect2 = targetEl.getBoundingClientRect();
 
-        const overlap = !(
-            r1.right < r2.left ||
-            r1.left > r2.right ||
-            r1.bottom < r2.top ||
-            r1.top > r2.bottom
-        );
-
-        if (!overlap) continue;
-
-        const key = active.dataset.name + "+" + other.dataset.name;
-        const result = recipes[key];
-
-        if (result) {
-            const x = (parseInt(active.style.left) + parseInt(other.style.left)) / 2;
-            const y = (parseInt(active.style.top) + parseInt(other.style.top)) / 2;
-
-            active.remove();
-            other.remove();
-
-            const newBlock = document.createElement("div");
-            newBlock.className = "block";
-            newBlock.textContent = result;
-            newBlock.dataset.name = result;
-            newBlock.style.left = x + "px";
-            newBlock.style.top = y + "px";
-
-            workspace.appendChild(newBlock);
-            enableDragging(newBlock);
-
-            if (!discovered.includes(result)) {
-                discovered.push(result);
-                saveGame();
-                renderSidebar(search.value);
-                showToast("Discovered " + result);
-            }
-
-            break;
+        // Check for intersection (AABB Collision)
+        if (!(rect1.right < rect2.left || 
+              rect1.left > rect2.right || 
+              rect1.bottom < rect2.top || 
+              rect1.top > rect2.bottom)) {
+            
+            attemptCombine(draggedEl, targetEl);
+            return; // Stop checking after first collision
         }
     }
 }
 
-function showToast(text) {
-    toast.textContent = text;
-    toast.style.display = "block";
+// 6. Combine elements if a recipe exists
+function attemptCombine(el1, el2) {
+    const item1 = el1.textContent;
+    const item2 = el2.textContent;
 
-    setTimeout(() => {
-        toast.style.display = "none";
-    }, 2000);
+    // Check both combinations A+B and B+A
+    const combo1 = `${item1}+${item2}`;
+    const combo2 = `${item2}+${item1}`;
+
+    const result = recipes[combo1] || recipes[combo2];
+
+    if (result) {
+        // Destroy old elements
+        el1.remove();
+        el2.remove();
+
+        // Create new combined element
+        const newEl = document.createElement('div');
+        newEl.className = 'element in-workspace';
+        newEl.textContent = result;
+        newEl.style.left = el2.style.left; 
+        newEl.style.top = el2.style.top;
+        newEl.style.zIndex = ++zIndexCounter;
+        newEl.onmousedown = (ev) => startDrag(ev, result, false);
+        
+        workspace.appendChild(newEl);
+
+        // Add to sidebar if not discovered yet
+        if (!discovered.includes(result)) {
+            discovered.push(result);
+            renderSidebar();
+        }
+    }
 }
