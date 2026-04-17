@@ -1,4 +1,3 @@
-/* Core Layout Fixes */
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
@@ -9,33 +8,30 @@ body, html {
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden; /* Prevents whole-page scrolling on mobile */
-    background-color: #fff;
+    overflow: hidden;
     font-family: 'Inter', sans-serif;
+    background-color: #fff;
 }
 
 #game-container {
     display: flex;
-    flex-direction: row;
     width: 100vw;
     height: 100vh;
 }
 
-/* LEFT SIDE: The Workspace */
 #workspace {
-    flex: 1; /* Takes up all remaining space */
+    flex: 1;
     background-color: #f9fafb;
     background-image: radial-gradient(#d1d5db 1px, transparent 1px);
     background-size: 30px 30px;
     position: relative;
     overflow: hidden;
-    touch-action: none; /* Crucial for dragging on mobile */
+    touch-action: none;
 }
 
-/* RIGHT SIDE: The Sidebar */
 #sidebar {
-    width: 300px; /* Fixed width */
-    min-width: 300px; 
+    width: 320px;
+    min-width: 320px;
     height: 100%;
     background: #ffffff;
     border-left: 2px solid #e5e7eb;
@@ -47,42 +43,44 @@ body, html {
 .sidebar-header {
     padding: 20px;
     border-bottom: 1px solid #f3f4f6;
-    text-align: center;
+    background: white;
 }
 
 .sidebar-header h1 {
-    font-size: 1.1rem;
+    font-size: 1rem;
     margin: 0;
     color: #6b7280;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
 
 #inventory {
     flex: 1;
     padding: 15px;
-    overflow-y: auto; /* Allows scrolling when you have many items */
+    overflow-y: auto;
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;
     gap: 8px;
-    -webkit-overflow-scrolling: touch;
 }
 
-/* The Elements */
 .element {
-    padding: 10px 16px;
+    padding: 10px 14px;
     background: white;
     border: 1px solid #d1d5db;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.95rem;
     user-select: none;
     -webkit-user-select: none;
-    -webkit-touch-callout: none;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: transform 0.05s;
+}
+
+.element:active {
+    transform: scale(0.95);
 }
 
 .element.in-workspace {
@@ -91,17 +89,22 @@ body, html {
     z-index: 10;
 }
 
-#clear-btn {
+#controls {
     position: absolute;
     top: 20px;
     left: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+}
+
+#clear-btn, #reset-btn {
     padding: 8px 16px;
-    background: #ffffff;
+    background: white;
     border: 1px solid #d1d5db;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
-    z-index: 100;
 }
 
-#clear-btn:active { background: #f3f4f6; }
+#reset-btn { color: #ef4444; border-color: #fee2e2; }
