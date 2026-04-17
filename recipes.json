@@ -9,5 +9,7 @@
     "🌊 Lake+🌊 Lake": "🐋 Ocean",
     "🌱 Plant+💧 Water": "🌲 Swamp",
     "🌫️ Dust+🔥 Fire": "💥 Gunpowder",
-    "🌱 Plant+⏳ Time": "🌳 Tree"
+    "🌋 Lava+💧 Water": "🪨 Stone",
+    "🪨 Stone+🔥 Fire": "🔩 Metal",
+    "💨 Steam+🔩 Metal": "🚂 Engine"
 }
