@@ -1,43 +1,11 @@
 {
-  "🔥 Fire+💧 Water": "☁️ Steam",
-  "💧 Water+🔥 Fire": "☁️ Steam",
-
-  "🌍 Earth+💧 Water": "🪨 Mud",
-  "💧 Water+🌍 Earth": "🪨 Mud",
-
-  "🔥 Fire+🌍 Earth": "🌋 Lava",
-  "🌍 Earth+🔥 Fire": "🌋 Lava",
-
-  "💨 Wind+🔥 Fire": "💨 Smoke",
-  "🔥 Fire+💨 Wind": "💨 Smoke",
-
-  "💨 Wind+💧 Water": "🌊 Wave",
-  "💧 Water+💨 Wind": "🌊 Wave",
-
-  "🌋 Lava+💧 Water": "🪨 Stone",
-  "💧 Water+🌋 Lava": "🪨 Stone",
-
-  "🪨 Stone+🔥 Fire": "🔩 Metal",
-  "🔥 Fire+🪨 Stone": "🔩 Metal",
-
-  "🌍 Earth+💨 Wind": "🌫️ Dust",
-  "💨 Wind+🌍 Earth": "🌫️ Dust",
-
-  "🌫️ Dust+💧 Water": "🌱 Plant",
-  "💧 Water+🌫️ Dust": "🌱 Plant",
-
-  "🌱 Plant+💧 Water": "🌳 Tree",
-  "💧 Water+🌱 Plant": "🌳 Tree",
-
-  "🌳 Tree+🔥 Fire": "🪵 Charcoal",
-  "🔥 Fire+🌳 Tree": "🪵 Charcoal",
-
-  "☁️ Steam+💨 Wind": "☁️ Cloud",
-  "💨 Wind+☁️ Steam": "☁️ Cloud",
-
-  "☁️ Cloud+💧 Water": "🌧️ Rain",
-  "💧 Water+☁️ Cloud": "🌧️ Rain",
-
-  "🌧️ Rain+🌍 Earth": "🌿 Life",
-  "🌍 Earth+🌧️ Rain": "🌿 Life"
+    "Water+Water": "Lake",
+    "Fire+Water": "Steam",
+    "Earth+Water": "Plant",
+    "Earth+Fire": "Lava",
+    "Air+Earth": "Dust",
+    "Air+Fire": "Smoke",
+    "Air+Water": "Rain",
+    "Lake+Lake": "Ocean",
+    "Plant+Time": "Tree"
 }
