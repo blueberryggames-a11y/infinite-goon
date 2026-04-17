@@ -1,33 +1,54 @@
-let recipes = {};
+// 1. Setup initial state
 let discovered = ['💧 Water', '🔥 Fire', '🪨 Earth', '💨 Air'];
+let recipes = {};
 let zIndexCounter = 100;
+
+// Hardcoded backup recipes in case recipes.json fails to load
+const backupRecipes = {
+    "💧 Water+💧 Water": "🌊 Lake",
+    "🔥 Fire+💧 Water": "💨 Steam",
+    "🪨 Earth+💧 Water": "🌱 Plant",
+    "🪨 Earth+🔥 Fire": "🌋 Lava"
+};
 
 const workspace = document.getElementById('workspace');
 const inventory = document.getElementById('inventory');
 const clearBtn = document.getElementById('clear-btn');
 
-// 1. Initial Load
+// 2. Initialize Game
 async function init() {
+    console.log("Game Initializing...");
+    
+    // IMMEDIATELY render starting blocks so they aren't stuck waiting for a file
+    renderSidebar();
+
     try {
         const res = await fetch('recipes.json');
         if (res.ok) {
-            recipes = await res.json();
+            const data = await res.json();
+            recipes = data;
+            console.log("Recipes loaded from JSON.");
+        } else {
+            throw new Error("JSON file not found");
         }
     } catch (e) {
-        console.warn("Recipes JSON not found, using base items only.");
+        console.warn("Could not load recipes.json (Expected if not using a local server). Using backups.");
+        recipes = backupRecipes;
     }
-    renderSidebar();
 }
 
-// 2. Refresh Sidebar Items
+// 3. Render Sidebar
 function renderSidebar() {
+    if (!inventory) return console.error("Inventory div not found!");
+    
     inventory.innerHTML = '';
-    discovered.forEach(item => {
+    // Use a Set to ensure no duplicates, then sort
+    [...new Set(discovered)].sort().forEach(item => {
         const el = document.createElement('div');
         el.className = 'element';
         el.textContent = item;
         
-        // Mobile-friendly click to spawn
+        // Use pointerdown for instant response on iPad
         el.onpointerdown = (e) => {
             e.preventDefault();
             spawnInWorkspace(item);
@@ -36,28 +57,23 @@ function renderSidebar() {
     });
 }
 
-// 3. Spawn item in Workspace
+// 4. Spawn in Workspace
 function spawnInWorkspace(itemName) {
     const el = document.createElement('div');
     el.className = 'element in-workspace';
     el.textContent = itemName;
     
-    // Position in the visible center of the workspace
     const rect = workspace.getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const offset = () => (Math.random() - 0.5) * 60; // Spread items out slightly
+    const offset = () => (Math.random() - 0.5) * 50;
 
-    el.style.left = `${centerX + offset() - 40}px`;
-    el.style.top = `${centerY + offset() - 20}px`;
+    el.style.left = (rect.width / 2) + offset() - 40 + 'px';
+    el.style.top = (rect.height / 2) + offset() - 20 + 'px';
     
     workspace.appendChild(el);
-    
-    // Bind Dragging
     el.onpointerdown = (e) => startDrag(e, el);
 }
 
-// 4. Drag Logic (Pointer Events work for Mouse & iPad Touch)
+// 5. Drag Logic
 function startDrag(e, el) {
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
@@ -65,21 +81,14 @@ function startDrag(e, el) {
 
     const rect = el.getBoundingClientRect();
     const workspaceRect = workspace.getBoundingClientRect();
-    
     const shiftX = e.clientX - rect.left;
     const shiftY = e.clientY - rect.top;
 
-    function moveAt(clientX, clientY) {
-        // Keeps element within the workspace boundaries
-        let x = clientX - workspaceRect.left - shiftX;
-        let y = clientY - workspaceRect.top - shiftY;
-        
-        el.style.left = `${x}px`;
-        el.style.top = `${y}px`;
-    }
-
     function onPointerMove(ev) {
-        moveAt(ev.clientX, ev.clientY);
+        let x = ev.clientX - workspaceRect.left - shiftX;
+        let y = ev.clientY - workspaceRect.top - shiftY;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
     }
 
     function onPointerUp(ev) {
@@ -93,7 +102,7 @@ function startDrag(e, el) {
     document.addEventListener('pointerup', onPointerUp);
 }
 
-// 5. Combination Logic
+// 6. Combination Logic
 function checkCollision(draggedEl) {
     const r1 = draggedEl.getBoundingClientRect();
     const items = document.querySelectorAll('.in-workspace');
@@ -102,16 +111,15 @@ function checkCollision(draggedEl) {
         if (target === draggedEl) continue;
         const r2 = target.getBoundingClientRect();
 
-        // Check if the two blocks overlap
-        const isOverlapping = !(r1.right < r2.left || r1.left > r2.right || 
-                                r1.bottom < r2.top || r1.top > r2.bottom);
+        const overlap = !(r1.right < r2.left || r1.left > r2.right || 
+                          r1.bottom < r2.top || r1.top > r2.bottom);
 
-        if (isOverlapping) {
-            const result = recipes[`${draggedEl.textContent}+${target.textContent}`] || 
-                           recipes[`${target.textContent}+${draggedEl.textContent}`];
+        if (overlap) {
+            const itemA = draggedEl.textContent;
+            const itemB = target.textContent;
+            const result = recipes[`${itemA}+${itemB}`] || recipes[`${itemB}+${itemA}`];
 
             if (result) {
-                // Keep the location of the stationary item
                 const spawnX = target.style.left;
                 const spawnY = target.style.top;
 
@@ -128,7 +136,6 @@ function checkCollision(draggedEl) {
                 
                 workspace.appendChild(newEl);
 
-                // Add to sidebar if it's a new discovery
                 if (!discovered.includes(result)) {
                     discovered.push(result);
                     renderSidebar();
@@ -143,4 +150,5 @@ clearBtn.onclick = () => {
     document.querySelectorAll('.in-workspace').forEach(el => el.remove());
 };
 
+// Run the init
 init();
